@@ -1,0 +1,27 @@
+[
+    {
+      "id": "1",
+      "name": "Waffle with Berrie",
+      "category": "Waffle",
+      "price": 6.5,
+      "image": {
+        "thumbnail": "https://orderfoodonline.deno.dev/public/images/image-waffle-thumbnail.jpg",
+        "mobile": "https://orderfoodonline.deno.dev/public/images/image-waffle-mobile.jpg",
+        "tablet": "https://orderfoodonline.deno.dev/public/images/image-waffle-tablet.jpg",
+        "desktop": "https://orderfoodonline.deno.dev/public/images/image-waffle-desktop.jpg"
+      }
+    },
+    {
+      "id": "2",
+      "name": "Classic Tiramisu",
+      "category": "Tiramisu",
+      "price": 5.5,
+      "image": {
+        "thumbnail": "https://orderfoodonline.deno.dev/public/images/image-tiramisu-thumbnail.jpg",
+        "mobile": "https://orderfoodonline.deno.dev/public/images/image-tiramisu-mobile.jpg",
+        "tablet": "https://orderfoodonline.deno.dev/public/images/image-tiramisu-tablet.jpg",
+        "desktop": "https://orderfoodonline.deno.dev/public/images/image-tiramisu-desktop.jpg"
+      }
+    }
+  ]
+  

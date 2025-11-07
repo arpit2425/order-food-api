@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/gofiber/fiber/v2"
 	"oilio.com/internal/http/routes"
+	"oilio.com/internal/store/filestore"
 )
 
 func New() *fiber.App {
@@ -11,6 +12,10 @@ func New() *fiber.App {
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "ok", "msg": "Server is up and running"})
 	})
-	routes.SetupRoutes(app)
+	store := filestore.New(
+		"internal/store/filestore/data/products.json",
+		"internal/store/filestore/data/orders.json",
+	)
+	routes.SetupRoutes(app, store)
 	return app
 }

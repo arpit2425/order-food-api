@@ -36,6 +36,6 @@ func NotFound(c *fiber.Ctx, message string) error {
 	return Error(c, fiber.StatusNotFound, message)
 }
 
-func InternalError(c *fiber.Ctx, message string) error {
+func InternalServerError(c *fiber.Ctx, message string) error {
 	return Error(c, fiber.StatusInternalServerError, message)
 }

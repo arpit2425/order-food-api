@@ -1,0 +1,16 @@
+[
+  {
+    "id": "dc00fa60-1b7c-4c35-bdc7-5840908f4eaf",
+    "items": [
+      {
+        "productId": "1",
+        "quantity": 1
+      }
+    ],
+    "subtotal": 2,
+    "discount": 0,
+    "total": 2,
+    "promoCode": "",
+    "createdAt": "2025-11-07T22:33:21.918552+05:30"
+  }
+]
