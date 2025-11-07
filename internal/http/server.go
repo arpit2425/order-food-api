@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"oilio.com/internal/routes"
+	"oilio.com/internal/http/routes"
 )
 
 func New() *fiber.App {
