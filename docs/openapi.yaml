@@ -1,0 +1,267 @@
+openapi: 3.1.0
+info:
+  title: Oilio Food Ordering API - OpenAPI 3.1
+  description: >-
+    This is the official *Food Ordering API**, built using Go (Fiber)
+    and documented under the **OpenAPI 3.1** specification.
+
+    The API allows clients to browse products, apply coupons, and place orders
+    seamlessly.
+
+    ---
+    **Authentication**  
+    Use the API key: `apitest` in the header.  
+    Example:  
+    `Authorization: ApiKey apitest`
+
+    ---
+    **Developer Contact:**
+    - **Name:** Arpit Trivedi  
+    - **Email:** arpittrivedi2425@gmail.com
+  
+  
+
+    ---
+    **Resources:**
+    - [Backend Repository](https://github.com/oolio-group/backend-api)  ///change
+    - [API Documentation](http://localhost:8080/docs) 
+
+  version: 1.1.0
+  termsOfService: 
+  contact:
+    name: Arpit Trivedi
+    email: arpittrivedi2425@gmail.com
+   
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+externalDocs:
+  description: Learn more about the Food Ordering API challenge
+  url: https://swagger.io
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local development server
+
+tags:
+  - name: product
+    description: Operations related to available menu items
+  - name: order
+    description: Create and manage customer orders
+
+paths:
+  /product:
+    get:
+      tags:
+        - product
+      summary: List available products
+      description: Fetch all active food products that can be ordered.
+      operationId: listProducts
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+  /product/{productId}:
+    get:
+      tags:
+        - product
+      summary: Get product by ID
+      description: Retrieve details of a single product by its ID.
+      operationId: getProduct
+      parameters:
+        - name: productId
+          in: path
+          description: Unique product identifier
+          required: true
+          schema:
+            type: string
+            example: "5"
+      responses:
+        "200":
+          description: Product found successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/Product"
+        "400":
+          description: Invalid product ID supplied
+        "404":
+          description: Product not found
+  /order:
+    post:
+      tags:
+        - order
+      summary: Place a new order
+      description: Create a new food order and optionally apply a promo code.
+      operationId: placeOrder
+      security:
+        - api_key: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderReq"
+      responses:
+        "200":
+          description: Order successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/Order"
+        "400":
+          description: Invalid order payload
+        "422":
+          description: Validation failed
+
+components:
+  schemas:
+    Product:
+      type: object
+      description: Product model representing a menu item
+      properties:
+        id:
+          type: string
+          example: "10"
+        name:
+          type: string
+          example: "Chicken Waffle"
+        price:
+          type: number
+          format: float
+          description: Selling price in USD
+          example: 6.5
+        category:
+          type: string
+          example: "Waffle"
+        image:
+          type: object
+          properties:
+            thumbnail:
+              type: string
+              format: uri
+              example: "https://oilio.com/images/image-waffle-thumbnail.jpg"
+            mobile:
+              type: string
+              format: uri
+              example: "https://oilio.com/images/image-waffle-mobile.jpg"
+            tablet:
+              type: string
+              format: uri
+              example: "https://oilio.com/images/image-waffle-tablet.jpg"
+            desktop:
+              type: string
+              format: uri
+              example: "https://oilio.com/images/image-waffle-desktop.jpg"
+      required:
+        - id
+        - name
+        - price
+        - category
+        - image
+
+    Order:
+      type: object
+      description: Order object representing a placed customer order
+      properties:
+        id:
+          type: string
+          example: "ORD-123456"
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+                description: ID of the product ordered
+                example: "1"
+              quantity:
+                type: integer
+                description: Number of units
+                example: 2
+        totalPrice:
+          type: number
+          format: float
+          description: Total price after discounts
+          example: 12.5
+        couponCode:
+          type: string
+          description: Optional promo code applied to the order
+          example: "HAPPYHRS"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-11-07T18:30:00Z"
+
+    OrderReq:
+      type: object
+      description: Request body to place a new order
+      properties:
+        couponCode:
+          type: string
+          description: Optional promo code
+          example: "FIFTYOFF"
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+                description: Product identifier
+                example: "2"
+              quantity:
+                type: integer
+                description: Quantity ordered
+                example: 3
+            required:
+              - productId
+              - quantity
+      required:
+        - items
+
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+          example: 200
+        type:
+          type: string
+          example: "success"
+        message:
+          type: string
+          example: "Order placed successfully"
+
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: Authorization
+      in: header
+      description: Provide your API key as `Authorization: ApiKey {key}`
