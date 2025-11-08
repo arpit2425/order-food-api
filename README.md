@@ -45,7 +45,7 @@ Must appear in **at least two** of these files:
 ## 🧰 Setup
 
 ```bash
-git clone https://github.com/<your-username>/order-food-api.git
+git clone https://github.com/arpit2425/order-food-api.git
 cd order-food-api
 go mod tidy
 export API_KEY=apitest
