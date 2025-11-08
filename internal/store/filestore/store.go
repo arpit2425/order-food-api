@@ -1,31 +1,46 @@
 package filestore
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
 	"oilio.com/internal/model"
 	"oilio.com/internal/store"
 	"oilio.com/internal/store/dao"
+	"oilio.com/internal/store/s3store"
 )
 
 type fileStore struct {
-	productDAO *dao.FileDAO[model.Product]
-	orderDAO   *dao.FileDAO[model.Order]
-	coupons    *couponStore
+	productDAO  *dao.FileDAO[model.Product]
+	orderDAO    *dao.FileDAO[model.Order]
+	couponStore *s3store.CouponValidator
 }
 
 func New(productPath, orderPath string, couponPaths []string) store.Store {
+	ctx := context.Background()
+
+	bucket := "orderfoodonline-files"
+	keys := []string{
+		"couponbase1.gz",
+		"couponbase2.gz",
+		"couponbase3.gz",
+	}
+
+	validator, err := s3store.NewCouponValidator(ctx, bucket, keys)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	fs := &fileStore{
-		productDAO: &dao.FileDAO[model.Product]{FilePath: productPath},
-		orderDAO:   &dao.FileDAO[model.Order]{FilePath: orderPath},
-		coupons:    newCouponStore(couponPaths),
+		productDAO:  &dao.FileDAO[model.Product]{FilePath: productPath},
+		orderDAO:    &dao.FileDAO[model.Order]{FilePath: orderPath},
+		couponStore: validator,
 	}
 	println("[INFO] Loading coupons from:", couponPaths)
-	// if err := fs.coupons.loadCoupons(); err != nil {
-	// 	println("[WARN] Failed to load coupons:", err.Error())
-	// }
 	println("[INFO] Coupons loaded successfully")
 
 	return fs
@@ -82,5 +97,8 @@ func (fs *fileStore) GetOrder(id string) (model.Order, error) {
 }
 
 func (fs *fileStore) ValidatePromo(code string) error {
-	return fs.coupons.validate(code)
+	ctx := context.Background()
+	err := fs.couponStore.ValidatePromo(ctx, code)
+	fmt.Println(err)
+	return err
 }

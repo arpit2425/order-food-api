@@ -20,40 +20,57 @@ type orderHandler struct {
 func NewOrderHandler(store store.Store) OrderHandler {
 	return &orderHandler{store: store}
 }
-func (h *orderHandler) PlaceOrder(c *fiber.Ctx) error {
 
+func (h *orderHandler) PlaceOrder(c *fiber.Ctx) error {
 	var orderRequest model.OrderRequest
+
 	if err := c.BodyParser(&orderRequest); err != nil {
 		return helpers.BadRequest(c, "Invalid JSON body")
 	}
+
 	if err := validator.ValidateOrderRequest(orderRequest); err != nil {
 		return helpers.BadRequest(c, err.Error())
 	}
-	subtotal := calculateSubtotal(orderRequest.Items)
-	discount := calculateDiscount(orderRequest.PromoCode)
+
+	subtotal := 0.0
+	for _, item := range orderRequest.Items {
+		product, err := h.store.GetProduct(item.ProductID)
+		if err != nil {
+			return helpers.BadRequest(c, "Invalid product ID: "+item.ProductID)
+		}
+		subtotal += product.Price * float64(item.Quantity)
+	}
+
+	discount := h.calculateDiscount(orderRequest.PromoCode)
 	total := subtotal - discount
-	order, err := h.store.CreateOrder(model.Order{
+	if total < 0 {
+		total = 0
+	}
+
+	order := model.Order{
 		ID:        uuid.NewString(),
 		Items:     orderRequest.Items,
 		Subtotal:  subtotal,
 		Discount:  discount,
 		Total:     total,
 		PromoCode: &orderRequest.PromoCode,
-	})
+	}
+
+	savedOrder, err := h.store.CreateOrder(order)
 	if err != nil {
 		return helpers.InternalServerError(c, err.Error())
 	}
-	return helpers.Success(c, order)
+
+	return helpers.Success(c, fiber.Map{
+		"message": "Order placed successfully",
+		"order":   savedOrder,
+	})
 }
 
-func calculateSubtotal(items []model.OrderItem) float64 {
-	subtotal := 0.0
-	for _, item := range items {
-		subtotal += 2.0 * float64(item.Quantity) // TODO: Make it dynamic from the product price
+func (h orderHandler) calculateDiscount(promoCode string) float64 {
+	err := h.store.ValidatePromo(promoCode)
+	if err != nil {
+		return 0.0
 	}
-	return subtotal
-}
-
-func calculateDiscount(promoCode string) float64 {
-	return 0.0
+	return 2.0
 }

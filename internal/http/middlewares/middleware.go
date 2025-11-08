@@ -1,17 +1,13 @@
 package middlewares
 
 import (
-	"os"
-
 	"github.com/gofiber/fiber/v2"
+	"oilio.com/internal/config"
 	"oilio.com/internal/http/helpers"
 )
 
 func Authenticate() fiber.Handler {
-	expectedKey := os.Getenv("API_KEY")
-	if expectedKey == "" {
-		expectedKey = "apitest"
-	}
+	expectedKey := config.Load().ApiKey
 
 	return func(c *fiber.Ctx) error {
 		apiKey := c.Get("api_key")

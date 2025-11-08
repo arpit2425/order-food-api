@@ -24,51 +24,71 @@ func newCouponStore(paths []string) *couponStore {
 	}
 }
 
-// loadCoupons builds the in-memory index from all files.
 func (c *couponStore) loadCoupons() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
 	if len(c.paths) == 0 {
 		return errors.New("no coupon files configured")
 	}
 
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(c.paths))
+
 	for _, path := range c.paths {
-		file, err := os.Open(path)
-		if err != nil {
-			return fmt.Errorf("failed to open %s: %w", path, err)
-		}
-		defer file.Close()
+		wg.Add(1)
+		go func(path string) {
+			defer wg.Done()
 
-		gzr, err := gzip.NewReader(file)
-		if err != nil {
-			return fmt.Errorf("failed to create gzip reader for %s: %w", path, err)
-		}
-		defer gzr.Close()
-
-		seen := map[string]struct{}{}
-		reader := bufio.NewReader(gzr)
-
-		for {
-			line, err := reader.ReadString('\n')
-			if len(line) > 0 {
-				code := strings.ToUpper(strings.TrimSpace(line))
-				if code == "" {
-					continue
-				}
-				if _, exists := seen[code]; !exists {
-					c.index[code]++
-					seen[code] = struct{}{}
-				}
-			}
-			if err == io.EOF {
-				break
-			}
+			file, err := os.Open(path)
 			if err != nil {
-				return fmt.Errorf("read error in %s: %w", path, err)
+				errCh <- fmt.Errorf("failed to open %s: %w", path, err)
+				return
 			}
+			defer file.Close()
+
+			gzr, err := gzip.NewReader(file)
+			if err != nil {
+				errCh <- fmt.Errorf("failed to create gzip reader for %s: %w", path, err)
+				return
+			}
+			defer gzr.Close()
+
+			seen := make(map[string]struct{})
+			reader := bufio.NewReader(gzr)
+
+			for {
+				line, err := reader.ReadString('\n')
+				if len(line) > 0 {
+					code := strings.ToUpper(strings.TrimSpace(line))
+					if code == "" {
+						continue
+					}
+					if _, exists := seen[code]; !exists {
+						seen[code] = struct{}{}
+
+						c.mu.Lock()
+						c.index[code]++
+						c.mu.Unlock()
+					}
+				}
+				if err == io.EOF {
+					break
+				}
+				if err != nil {
+					errCh <- fmt.Errorf("read error in %s: %w", path, err)
+					return
+				}
+			}
+		}(path)
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	for err := range errCh {
+		if err != nil {
+			return err
 		}
 	}
+
 	return nil
 }
 
@@ -79,9 +99,9 @@ func (c *couponStore) validate(code string) error {
 	}
 
 	c.mu.RLock()
-	defer c.mu.RUnlock()
-
 	count := c.index[code]
+	c.mu.RUnlock()
+
 	if count >= 2 {
 		return nil
 	}
