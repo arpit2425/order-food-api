@@ -166,5 +166,19 @@
     "total": 6.5,
     "promoCode": "HAPPYHRS",
     "createdAt": "2025-11-08T14:31:16.933878+05:30"
+  },
+  {
+    "id": "95d3fd87-9f98-4cdf-ab80-3fc11a84f0bc",
+    "items": [
+      {
+        "productId": "1",
+        "quantity": 1
+      }
+    ],
+    "subtotal": 6.5,
+    "discount": 0,
+    "total": 6.5,
+    "promoCode": "HAPPYHRS",
+    "createdAt": "2025-11-08T16:38:51.326428+05:30"
   }
 ]
