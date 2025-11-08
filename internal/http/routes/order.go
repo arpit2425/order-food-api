@@ -8,5 +8,6 @@ import (
 
 func RegisterOrderRoutes(api fiber.Router, store store.Store) {
 	r := api.Group("/order")
-	r.Post("/", handlers.PlaceOrder(store))
+	handler := handlers.NewOrderHandler(store)
+	r.Post("/", handler.PlaceOrder)
 }

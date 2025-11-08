@@ -15,6 +15,11 @@ func New() *fiber.App {
 	store := filestore.New(
 		"internal/store/filestore/data/products.json",
 		"internal/store/filestore/data/orders.json",
+		[]string{
+			"internal/store/filestore/data/couponbase1.gz",
+			"internal/store/filestore/data/couponbase2.gz",
+			"internal/store/filestore/data/couponbase3.gz",
+		},
 	)
 	routes.SetupRoutes(app, store)
 	return app

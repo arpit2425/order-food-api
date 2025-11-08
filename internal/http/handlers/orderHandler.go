@@ -9,31 +9,41 @@ import (
 	"oilio.com/internal/validator"
 )
 
-func PlaceOrder(store store.Store) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var orderRequest model.OrderRequest
-		if err := c.BodyParser(&orderRequest); err != nil {
-			return helpers.BadRequest(c, "Invalid JSON body")
-		}
-		if err := validator.ValidateOrderRequest(orderRequest); err != nil {
-			return helpers.BadRequest(c, err.Error())
-		}
-		subtotal := calculateSubtotal(orderRequest.Items)
-		discount := calculateDiscount(orderRequest.PromoCode)
-		total := subtotal - discount
-		order, err := store.CreateOrder(model.Order{
-			ID:        uuid.NewString(),
-			Items:     orderRequest.Items,
-			Subtotal:  subtotal,
-			Discount:  discount,
-			Total:     total,
-			PromoCode: &orderRequest.PromoCode,
-		})
-		if err != nil {
-			return helpers.InternalServerError(c, err.Error())
-		}
-		return helpers.Success(c, order)
+type OrderHandler interface {
+	PlaceOrder(c *fiber.Ctx) error
+}
+
+type orderHandler struct {
+	store store.Store
+}
+
+func NewOrderHandler(store store.Store) OrderHandler {
+	return &orderHandler{store: store}
+}
+func (h *orderHandler) PlaceOrder(c *fiber.Ctx) error {
+
+	var orderRequest model.OrderRequest
+	if err := c.BodyParser(&orderRequest); err != nil {
+		return helpers.BadRequest(c, "Invalid JSON body")
 	}
+	if err := validator.ValidateOrderRequest(orderRequest); err != nil {
+		return helpers.BadRequest(c, err.Error())
+	}
+	subtotal := calculateSubtotal(orderRequest.Items)
+	discount := calculateDiscount(orderRequest.PromoCode)
+	total := subtotal - discount
+	order, err := h.store.CreateOrder(model.Order{
+		ID:        uuid.NewString(),
+		Items:     orderRequest.Items,
+		Subtotal:  subtotal,
+		Discount:  discount,
+		Total:     total,
+		PromoCode: &orderRequest.PromoCode,
+	})
+	if err != nil {
+		return helpers.InternalServerError(c, err.Error())
+	}
+	return helpers.Success(c, order)
 }
 
 func calculateSubtotal(items []model.OrderItem) float64 {

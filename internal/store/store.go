@@ -7,4 +7,5 @@ type Store interface {
 	GetProduct(id string) (model.Product, error)
 
 	CreateOrder(order model.Order) (model.Order, error)
+	ValidatePromo(code string) error
 }

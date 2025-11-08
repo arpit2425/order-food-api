@@ -13,13 +13,22 @@ import (
 type fileStore struct {
 	productDAO *dao.FileDAO[model.Product]
 	orderDAO   *dao.FileDAO[model.Order]
+	coupons    *couponStore
 }
 
-func New(productPath, orderPath string) store.Store {
-	return &fileStore{
+func New(productPath, orderPath string, couponPaths []string) store.Store {
+	fs := &fileStore{
 		productDAO: &dao.FileDAO[model.Product]{FilePath: productPath},
 		orderDAO:   &dao.FileDAO[model.Order]{FilePath: orderPath},
+		coupons:    newCouponStore(couponPaths),
 	}
+	println("[INFO] Loading coupons from:", couponPaths)
+	// if err := fs.coupons.loadCoupons(); err != nil {
+	// 	println("[WARN] Failed to load coupons:", err.Error())
+	// }
+	println("[INFO] Coupons loaded successfully")
+
+	return fs
 }
 
 func (fs *fileStore) ListProducts() ([]model.Product, error) {
@@ -70,4 +79,8 @@ func (fs *fileStore) GetOrder(id string) (model.Order, error) {
 		}
 	}
 	return model.Order{}, errors.New("order not found")
+}
+
+func (fs *fileStore) ValidatePromo(code string) error {
+	return fs.coupons.validate(code)
 }

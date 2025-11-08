@@ -8,7 +8,8 @@ import (
 
 func RegisterProductRoutes(api fiber.Router, store store.Store) {
 	r := api.Group("/product")
-	r.Get("/", handlers.GetProducts(store))
-	// r.Get("/:id", handlers.GetProduct())
+	handler := handlers.NewProductHandler(store)
+	r.Get("/", handler.GetProducts)
+	r.Get("/:id", handler.GetProduct)
 
 }
